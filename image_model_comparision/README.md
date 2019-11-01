@@ -2,9 +2,7 @@
 
 # FARMING
 
-## Sruthin Reddy Swathi Meka Sourav Kumar Mounika Chenna
-
-## Venkata Akhila
+## Sourav Kumar, Sruthin Reddy, Swathi Meka, Mounika Chenna and Venkata Akhila
 
 ## September 1, 2019
 
@@ -32,7 +30,8 @@ Keywords: Smart farming,YOLO, SSD, Mask RCNN, RFID, IOU, Segmentation, Classific
 and Object detection.
 ```
 
-## Download Source Code : https://1drv.ms/u/s!An5NTTrGR0UVkHUHROkP27Emg9m2?e=cTgRDg
+## Download Source Code : 
+https://1drv.ms/u/s!An5NTTrGR0UVkHUHROkP27Emg9m2?e=cTgRDg
 
 ## 1 Introduction
 
