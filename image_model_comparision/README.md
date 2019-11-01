@@ -2,7 +2,7 @@
 
 # FARMING
 
-## Sruthin Reddy, Swathi Meka, Sourav Kumar, Mounika Chenna and Venkata Akhila
+## Sourav Kumar, Sruthin Reddy, Swathi Meka, Mounika Chenna and Venkata Akhila
 
 ## September 1, 2019
 
