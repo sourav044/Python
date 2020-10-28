@@ -1,8 +1,5 @@
 import os
-import numpy
-import math
 import gensim
-from gensim.test.utils import common_texts
 from newspaper import Article
 import pandas as pd
 import newspaper
@@ -13,10 +10,9 @@ import nltk
 from gensim.models import Word2Vec
 
 
-
 article_dataframe = pd.DataFrame()
 url_extension = ['.cms', '.html']
-biased_word = ["oldpeople", "eliminated", "stop", "insult", "extorted", "burning", "flaunt", "bewitched", "blasts", "unbalanced"]
+biased_word = ["old", "eliminated", "flaunt", "blasts", "unbalanced", "sympathy", "weak", "worst", "insulted", "tumbles"]
 gensim_model = 'word2vec.model'
 
 
@@ -99,7 +95,6 @@ def fetch_article(domain):
         return ""
     except:
         return ""
-    # return
 
 
 def pre_process_text(title_data):
@@ -109,69 +104,64 @@ def pre_process_text(title_data):
     for index, row in title_data.iteritems():
         l_text = row.lower()
         sentence = re.sub(r'(https|http)?:\/\/(\w|\.|\/|\?|\=|\&|\%)*\b', '', str(l_text))
-        sentence = re.sub(r'[?|!|\'|’|"|#|@|_|:|“|”|-|"|-|-|<|>|{|}.|,|)|(|\|/]', r'', sentence)
-
-        words = [w for w in sentence.split() if w not in stop_words]
-        post_sentence = (" ".join(map(str, words)))
+        post_sentence = re.sub(r'[?|!|\'|’|"|#|@|_|:|“|”|-|"|-|-|<|>|{|}.|,|)|(|\|/]', r'', sentence)
 
         tokens = nltk.word_tokenize(post_sentence)
         words = [w for w in tokens if w not in stop_words]
+        post_sentence = (" ".join(map(str, words)))
 
-        title_data.loc[index] = (" ".join(map(str, words)))
+        title_data.loc[index] = post_sentence
     stop_word_file.close()
     return title_data
 
 
 def tokenize(sentence):
     tokens = []
-    for s in sentence.split():
-        token = nltk.word_tokenize(s)
-        tokens.append(token)
+    for index, row in sentence.iteritems():
+        for s in row.split():
+            token = nltk.word_tokenize(s)
+            tokens.append(token)
     return tokens
+
+
+# Computes n=max_count similar words for each word in 'seeds'
+def get_similarity_by_word(model, seeds, max_count):
+    for seed in seeds:
+        similar_words = model.wv.most_similar(seed, topn=max_count)
+        print("The {} most similar bias words for the given bias word {}  are: ".format(max_count, seed.upper()))
+        print(similar_words)
+        df = pd.DataFrame(similar_words, columns=['word', 'cosine_distance'])
+        df.to_csv("similar_words_for_{}.csv".format(seed.upper()), encoding='utf-8', index=False)
+        print('Result saved as: similar_words_for_{}.csv in directory'.format(seed.upper()))
+        print('\n')
+
 
 def word_embedding():
     article_coll = pd.read_csv("articles.csv")
     title_data = article_coll.iloc[:, 0]
     title_data = pre_process_text(title_data)
+    token_title_data = tokenize(title_data)
     model = None
-    # path = get_tmpfile("word2vec.model")
-    # model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
-    # model.save("")
-    # model.train(model.train([["hello", "world"]], total_examples=1, epochs=1))
     if os.path.isfile(gensim_model):
         print('Loading pre-trained model: {} ...'.format(gensim_model))
         # Loads the model from the disk
         model = gensim.models.Word2Vec.load(gensim_model)
     else:
         print('Training model: {} ...'.format(gensim_model))
-        model = gensim.models.Word2Vec(common_texts, size=150, window=5, min_count=1, workers=4)
-        model = model.train(model.train([biased_word], total_examples=len(biased_word), epochs=1))
+        model = gensim.models.Word2Vec(token_title_data, size=150, window=5, min_count=1, workers=4)
         print('Saving model as {}'.format(gensim_model))
         # Saves the model to the disk
         model.save(gensim_model)
-    for index, row in title_data.iteritems():
-        for tk in tokenize(row):
-            print(tk, cosine_distance(model, tk, biased_word, len(tk)))
-
-
-def cosine_distance(model, word, target_list, num):
-    cosine_dict ={}
-    word_list = []
-    a = model[word]
-    for item in target_list:
-        if item != word:
-            b = model[item]
-            cos_sim = numpy.dot(a, b)/(numpy.linalg.norm(a)*numpy.linalg.norm(b))
-            cosine_dict[item] = cos_sim
-    dist_sort = sorted(cosine_dict.items(), key=lambda dist: dist[1], reverse=True)
-    for item in dist_sort:
-        word_list.append((item[0], item[1]))
-    return word_list[0:num]
+        words = list(model.wv.vocab)
+        print('Vocabulary size: %d' % len(words))
+        filename = 'embedding_word2vec.txt'
+        model.wv.save_word2vec_format(filename, binary=False)
+    get_similarity_by_word(model, biased_word, max_count=100)
 
 
 if __name__ == '__main__':
     ## 1. Article collection from the URL
-     # article_collection()
+     #article_collection()
     ## 2.  Download the article
     # download_article()
     ## 3. Word embeddings to calculate the 100 most similar words to each of those words
