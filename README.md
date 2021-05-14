@@ -22,7 +22,7 @@ or any suitable web url and iterate it on the front end into the multiple of n.
 
 - We can render the number of camera view with the help of search bar.
 
-![](RackMultipart20210514-4-kyikin_html_d1d27acef07a66fc.png)
+![UI](https://github.com/kamini019/RTSP/1.png)
 
 **3**. Dockerize the project as well as expose it to localhost.
 
