@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ablation GIF Simulation</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MathJax CDN for LaTeX rendering -->
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            padding: 32px;
+            max-width: 600px;
+            width: 100%;
+            min-height: 700px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            overflow: hidden;
+        }
+
+        .main-content-area {
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Center content vertically */
+            align-items: center; /* Center content horizontally */
+            width: 100%;
+            flex-grow: 1;
+            padding: 20px 0;
+            position: relative; /* For absolute positioning of hidden elements */
+        }
+
+        /* Styles for the dynamically displayed content - removed display: flex here */
+        .logo-display,
+        .image-display-area,
+        .text-box,
+        .formula-display-area {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            width: 100%; /* Take full width of parent */
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1; /* Allow them to take available space */
+            padding: 10px 0; /* Add some padding for spacing */
+        }
+
+        /* Updated hidden state to use display: none */
+        .hidden {
+            display: none !important; /* Use !important to ensure it overrides other display properties */
+        }
+
+        .logo-display img {
+            max-width: 200px;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .image-display-area img {
+            max-width: 90%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .text-box {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            text-align: left; /* Changed to left for readability of longer text */
+            color: #475569;
+            max-height: 250px; /* Set a max-height to enable scrolling */
+            overflow-y: auto; /* Enable vertical scrolling */
+            line-height: 1.5; /* Improved line spacing */
+        }
+
+        /* Styling for h2 tags within the text-box */
+        .text-box h2 {
+            font-size: 1.3rem; /* Slightly larger for headings */
+            font-weight: 700; /* Bolder */
+            color: #3b82f6; /* Blue color for emphasis */
+            margin-top: 1.2em; /* Space above headings */
+            margin-bottom: 0.5em; /* Space below headings */
+            text-align: left; /* Ensure headings are left-aligned */
+        }
+
+        .text-box h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e40af;
+            margin-top: 1em;
+            margin-bottom: 0.4em;
+        }
+
+        .formula-display-area {
+            background-color: #e0eafc;
+            border: 2px solid #bfdbfe;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0; /* Spacing above and below */
+            font-size: 1.5rem; /* Larger font for formulas */
+            font-weight: 600;
+            color: #1e40af;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .controls {
+            display: flex;
+            gap: 16px;
+            margin-top: 20px;
+            width: 100%;
+            justify-content: center;
+            padding-bottom: 10px;
+        }
+
+        .control-button {
+            background-color: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+        }
+
+        .control-button:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .control-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(59, 130, 246, 0.2);
+        }
+
+        .control-button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+                height: auto;
+                max-width: 95%;
+            }
+            .main-content-area {
+                flex-direction: column;
+                gap: 40px;
+            }
+            .control-button {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            .controls {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-100vh p-4">
+    <div class="container">
+        <h1 id="mainTitle" class="text-2xl font-bold text-gray-800 text-center"></h1>
+
+        <div class="main-content-area">
+            <!-- Logo for the start screen -->
+            <div id="startLogo" class="logo-display hidden">
+                <img src="https://yt3.ggpht.com/Gv8_QaXl1K-ShN2rzHCmnpaRGH_B-SrTMI_92G1Nq75krEHp1bYRelS3oqUdN3Z-JC_-7umfLQ=s600-c-k-c0x00ffffff-no-rj-rp-mo" alt="Your Logo">
+            </div>
+
+            <!-- Area for Confusion Matrix Image -->
+            <div id="imageDisplayArea" class="image-display-area hidden">
+                <img id="confusionMatrixImage" src="" alt="Confusion Matrix">
+            </div>
+
+            <!-- Area for Formula Display -->
+            <div id="formulaDisplayArea" class="formula-display-area hidden"></div>
+
+            <!-- Scene Description Text Box -->
+            <div id="textBox" class="text-box hidden"></div>
+        </div>
+
+        <div class="controls">
+            <button id="previousScenarioButton" class="control-button">Previous Step</button>
+            <button id="nextScenarioButton" class="control-button">Next Step</button>
+            <button id="resetButton" class="control-button">Reset Simulation</button>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const mainTitle = document.getElementById('mainTitle');
+        const textBox = document.getElementById('textBox');
+        const nextScenarioButton = document.getElementById('nextScenarioButton');
+        const previousScenarioButton = document.getElementById('previousScenarioButton');
+        const resetButton = document.getElementById('resetButton');
+        const startLogo = document.getElementById('startLogo');
+        const imageDisplayArea = document.getElementById('imageDisplayArea');
+        const confusionMatrixImage = document.getElementById('confusionMatrixImage');
+        const formulaDisplayArea = document.getElementById('formulaDisplayArea');
+
+        let currentSceneIndex = 0;
+        let isAnimating = false;
+
+        // Define the sequence of scenes with their properties
+        const scenes = [
+            // Scene 0: Landing Page - Updated Title
+            {
+                title: "A/B Testing",
+                text: "Click 'Next Step' to begin the Simulation.",
+                displayElement: 'logo',
+                imageUrl: null,
+                formulaHtml: null
+            },
+            // Scene 1: Introduction
+            {
+                title: "Introduction to A/B Testing",
+                text: `
+                    <p>Hey guys! Welcome back to my channel - if you're new here, definitely hit the subscribe button because we talk about all new technology.</p>
+                    <p>So today... we’re going to talk about A/B Testing—a simple but powerful tool used in marketing, product design, and even machine learning. If you’ve ever wondered how companies decide which version of a website, app, or ad performs better, you’ve probably seen A/B testing in action behind the scenes in this video.</p>
+                    <p>And look, I know what you're thinking - "Oh great, another boring statistics video." But here's the thing - this stuff is actually fascinating when you see how companies like Netflix, Amazon, and literally every major tech company uses this to make huge decisions.</p>
+                    <p>Like, Netflix uses this to decide which thumbnail gets you to click on a movie. Amazon uses it for literally everything on their website. Companies are trying to understand if changing something in their app will hurt them or bring in more users - pretty interesting, right?</p>
+                    <p>So stick around because by the end of this video, you'll understand not just what A/B testing is, but exactly how to do it right and when you should use it.</p>
+                `,
+                displayElement: 'text',
+                imageUrl: null,
+                formulaHtml: null
+            },
+            // Scene 2: What Actually IS A/B Testing?
+            {
+                title: "What Actually IS A/B Testing?",
+                text: `
+                    <p>Alright, so let's start with the basics. A/B testing is basically... think of it like this - you know when you can't decide between two outfits? So you try on both and ask your friends which one looks better? That's essentially A/B testing, but for websites, apps, and marketing campaigns.</p>
+                    <p>So here's how it works - let's say you have a website, and you want to know if a red button or a blue button gets more people to buy your product. Instead of just guessing - because let's be honest, we're terrible at guessing - you show the red button to half your visitors and the blue button to the other half. Then you just... wait and see which one works better.</p>
+                `,
+                displayElement: 'image',
+                imageUrl: "https://raw.githubusercontent.com/sourav044/temp/refs/heads/main/Image%20Jul%2024%2C%202025%2C%2005_39_04%20PM.png",
+                formulaHtml: null
+            },
+            // Scene 3: Why A/B Test?
+            {
+                title: "Why A/B Test?",
+                text: `
+                    <h2>Why A/B Testing is Amazing:</h2>
+                    <ul>
+                        <li>No more guessing games - Real data tells you what works</li>
+                        <li>Your users tell you what they like - through their actions, not surveys</li>
+                        <li>Small changes can mean big money - even tiny improvements add up</li>
+                        <li>You can test everything - from email subject lines to entire website designs</li>
+                    </ul>
+                    <p>A/B Testing helps us remove the guesswork. It tells us what our audience prefers!</p>
+                `,
+                displayElement: 'image',
+                imageUrl: "https://raw.githubusercontent.com/sourav044/temp/refs/heads/main/Image%20Jul%2024%2C%202025%2C%2005_42_28%20PM.png",
+                formulaHtml: null
+            },
+            // Scene 4: A/B Testing Example
+            {
+                title: "A/B Testing Example",
+                text: `
+                    <p>And here's where it gets interesting - I was working with this client during 2020 - COVID time, right? They had an email campaign, and they couldn't decide between two subject lines. One said "20% Off Your Next Purchase" - pretty standard stuff. The other one said "Exclusive 20% Discount Just for You!"</p>
+                    <p>Guess which one performed better? The second one got way more opens! Why? Because people love feeling special. But we never would have known that without testing it.</p>
+                    <p>Instead of spending time arguing/guessing about which is better, I always say "Let's just test it." Because data doesn't lie, but our opinions definitely can.</p>
+                `,
+                displayElement: 'text',
+                imageUrl: null,
+                formulaHtml: null
+            },
+            // Scene 5: Testing Techniques in A/B Testing
+            {
+                title: "Testing Techniques in A/B Testing",
+                text: `
+                    <p>Now, let’s dive deeper into the testing techniques you can use in A/B testing, including a traditional approach and an alternative—Bayesian Testing.</p>
+                    <h2>The Traditional Way: Hypothesis Testing</h2>
+                    <p>So there are basically 3 main ways to do A/B testing.</p>
+                    <p>The first way - and this is what most people use - is called hypothesis testing. It's like... okay, imagine you flip a coin 100 times, and you want to know if it's a fair coin. You'd expect about 50 heads and 50 tails, right? If you get 70 heads, you'd probably think something's fishy with that coin.</p>
+                    <p>That's basically what we're doing with A/B testing. We start with a guess - like "I think this green button will get more clicks than the blue one." Then we ask "If there's really no difference between version A and version B, what are the chances we'd see results this crazy?"</p>
+                    <h3>The 5% Rule - Statistical Significance:</h3>
+                    <p>This is where that famous 5% number comes from. If the chances of seeing our results by pure luck are less than 5%, we say "Okay, there's probably a real difference here."</p>
+                    <p>Think of it like this - if you flip that coin and get 70 heads out of 100 flips, there's only like a 2% chance this would happen with a fair coin. Since 2% is less than 5%, you'd think the coin is probably rigged.</p>
+                    <h3>Confidence Level - How Sure Are We?</h3>
+                    <p>A 95% confidence level means "we're 95% sure our results aren't just random luck." It's like saying "if we did this same test 100 times, we'd get similar results 95 times."</p>
+                    <h3>When to Use Traditional Testing:</h3>
+                    <ul>
+                        <li>✅ You have lots of users (thousands)</li>
+                        <li>✅ You want simple, clear answers</li>
+                        <li>✅ You can wait for the full test to finish</li>
+                    </ul>
+                    <h3>Good Things About Traditional Testing:</h3>
+                    <ul>
+                        <li>Easy to understand and explain</li>
+                        <li>Everyone in business knows this approach</li>
+                        <li>Gives you clear yes/no answers</li>
+                        <li>Doesn't need fancy computer power</li>
+                    </ul>
+                    <h3>Not So Good Things:</h3>
+                    <ul>
+                        <li>You have to wait for enough people before you know anything</li>
+                        <li>Can't peek at results early without messing things up</li>
+                        <li>Doesn't tell you HOW MUCH better one version is</li>
+                    </ul>
+                    <h3>Chi-Square Test - For Yes/No Stuff</h3>
+                    <p>Now, when you're dealing with simple yes/no data - like "did they click the button or not" or "did they buy something or not" - you use something called a Chi-Square test.</p>
+                    <p>Think of it like comparing two pizza places. You ask 100 people "would you go back to Pizza Place A?" and 100 different people "would you go back to Pizza Place B?" Then you compare how many said yes to each. The Chi-Square test tells you if the difference is real or just random chance.</p>
+                    <h3>When to Use Chi-Square:</h3>
+                    <ul>
+                        <li>Testing if people click or don't click</li>
+                        <li>Testing if people buy or don't buy</li>
+                        <li>Testing if people sign up or don't sign up</li>
+                        <li>Any yes/no type questions</li>
+                    </ul>
+                    <h2>The New Way: Bayesian Testing</h2>
+                    <p>Now, there's this other approach called Bayesian testing, and honestly, it's pretty cool. Instead of just saying "yes, there's a difference" or "no, there isn't," it tells you something way more useful: "there's an 87% chance that version B beats version A."</p>
+                    <p>What I absolutely love about Bayesian testing is you don't have to sit around waiting like you're watching paint dry. You can peek at your results as they come in and make decisions in real-time. It's like having a live scoreboard that updates constantly instead of waiting until the game ends.</p>
+                    <p><strong>How Bayesian Works:</strong> Think of it as a confidence meter that keeps updating as more people use your test. So you might start at 60% confidence that B is better, then 75%, then 90% as more users try your stuff.</p>
+                    <h3>When to Use Bayesian Testing:</h3>
+                    <ul>
+                        <li>✅ You want to see results right away</li>
+                        <li>✅ You're testing lots of versions (A/B/C/D)</li>
+                        <li>✅ You don't have tons of users</li>
+                        <li>✅ You need to make quick business decisions</li>
+                    </ul>
+                    <h3>Good Things About Bayesian:</h3>
+                    <ul>
+                        <li>See results in real-time</li>
+                        <li>Works even with fewer people</li>
+                        <li>Tells you the probability, not just yes/no</li>
+                        <li>Makes more sense when you explain it</li>
+                    </ul>
+                    <h3>Not So Good Things:</h3>
+                    <ul>
+                        <li>Needs fancier computer stuff</li>
+                        <li>Requires special tools</li>
+                        <li>You need to know more math</li>
+                        <li>Harder to explain to your boss</li>
+                    </ul>
+                `,
+                displayElement: 'image',
+                imageUrl: "https://raw.githubusercontent.com/sourav044/temp/refs/heads/main/Image%20Jul%2024%2C%202025%2C%2005_44_25%20PM.png",
+                formulaHtml: null
+            },
+            // Scene 6: Distributions and Tools to Help You
+            {
+                title: "Distributions and Tools to Help You",
+                text: `
+                    <h2>Distributions</h2>
+                    <p>Okay, quick peek behind the curtain – don't worry, it's simple! When nerds like me talk about "distributions," we're just talking about how data spreads out.</p>
+                    <h3>The "Bell Curve" (Normal Distribution):</h3>
+                    <p>A lot of things in life, like people's heights or test scores, follow this shape. This image represents a normal distribution or bell curve, which is a key concept in statistics. Here's a breakdown of its important points:</p>
+                    <ul>
+                        <li><strong>Symmetry:</strong> The curve is perfectly balanced, meaning both sides are mirror images of each other. This tells us that the data is spread out evenly around the middle.</li>
+                        <li><strong>Peak:</strong> The very top of the curve is where the most common values are. In a perfect bell curve, this peak also represents the average, the middle value, and the most frequent value.</li>
+                        <li><strong>Tapering Ends:</strong> As you move away from the peak, the curve slowly gets lower and closer to the bottom line. This means that extreme values (things that are very far from the average) are rare, while values closer to the average are much more common.</li>
+                        <li><strong>Standard Deviation:</strong> This fancy term just tells us how wide or narrow the bell curve is. A smaller standard deviation means the data points are very close to the average (a narrow curve), while a larger one means they're more spread out (a wider curve). It shows us how much the values typically vary.</li>
+                        <li><strong>The 68-95-99.7 Rule:</strong> This is a super handy rule for bell curves:
+                            <ul>
+                                <li>About 68% of all data points fall within one "step" (one standard deviation) away from the average.</li>
+                                <li>About 95% fall within two "steps" away.</li>
+                                <li>And almost all (99.7%) fall within three "steps" away.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p><strong>Why it matters:</strong> Many natural things, like human heights or test scores, tend to follow this pattern. In A/B testing, even if individual actions don't look like a bell, the average results from many groups will start to form this bell shape. This helps us predict the likelihood of certain outcomes.</p>
+                    <h3>The "T-Distribution" (For Smaller Groups):</h3>
+                    <p>This is like a slightly wider, flatter bell curve. We use it when we don't have a huge amount of data. It's a bit more cautious, which is smart when you have less information to work with.</p>
+                    <h3>The "Yes/No" Distribution (Binomial):</h3>
+                    <p>This is just for things with two outcomes: did they click or not? Did they buy or not? The math for these often uses the "bell curve" idea when you have enough people.</p>
+                    <p>Now, for my personal rule of thumb: I try to get at least 1,000 people in each group I'm testing before I make any big decisions. Is it perfectly scientific? Nah. But it keeps me from jumping to conclusions too early.</p>
+                    <h2>Tools to Help You</h2>
+                    <p>Good news! You don't need to be a math genius to figure this out.</p>
+                    <ul>
+                        <li>Just Google "A/B test sample size calculator" – there are tons of free, easy-to-use tools online.</li>
+                        <li>Programs like R or Python can do it for you if you're into coding.</li>
+                        <li>And most A/B testing websites have these calculators built right in!</li>
+                    </ul>
+                `,
+                displayElement: 'text',
+                imageUrl: null,
+                formulaHtml: null
+            },
+            // Scene 7: Using Sampling Data in A/B Testing
+            {
+                title: "Using Sampling Data in A/B Testing",
+                text: `
+                    <p>Next, let’s talk about using sampling data. In A/B testing, it's essential to randomly sample users to ensure the groups are comparable. Here's how you can do it:</p>
+                    <h2>Random Sampling:</h2>
+                    <p>Random sampling means that each user has an equal chance of being assigned to either version A or version B. This ensures that the two groups (A and B) are similar in terms of demographics, behavior, and any other factors that could influence the test.</p>
+                    <h2>Sample Size Calculation:</h2>
+                    <p>It’s important to determine the right sample size for your test. If your sample size is too small, your results might not be reliable. Tools like power analysis can help you determine the correct sample size based on the expected effect size and statistical power. Generally, a larger sample size gives more reliable results.</p>
+                    <h2>Stratified Sampling:</h2>
+                    <p>In some cases, you might want to ensure that specific subgroups are represented in your test (e.g., new customers vs. returning customers). This is where stratified sampling comes in. It divides your population into different strata (groups) and then randomly samples from each group to ensure you have a balanced representation of all types of users.</p>
+                    <p>By using random sampling, you avoid bias and ensure that your A/B test results are truly reflective of how your entire audience would react to the change.</p>
+                `,
+                displayElement: 'image',
+                imageUrl: "https://raw.githubusercontent.com/sourav044/temp/refs/heads/main/Image%20Jul%2024%2C%202025%2C%2005_45_33%20PM.png",
+                formulaHtml: null
+            },
+            // Scene 8: Key Metrics in A/B Testing (Moved from original Scene 10)
+            {
+                title: "Key Metrics in A/B Testing",
+                text: `
+                    <p>Now let’s talk about the key metrics you should track in A/B testing:</p>
+                    <h2>Conversion Rate - The Big One</h2>
+                    <p>This is crucial - don't just look at clicks. I see people get excited because version B got more clicks, but then they don't check if those clicks actually turned into sales or sign-ups or whatever they actually wanted.</p>
+                    <p><strong>How to Calculate Conversion Rate:</strong> (Number of people who did what you wanted / Total number of people who saw it) × 100</p>
+                    <h3>Example:</h3>
+                    <ul>
+                        <li>1,000 people saw version A</li>
+                        <li>50 bought something</li>
+                        <li>Conversion rate = 5%</li>
+                    </ul>
+                    <h2>Click-Through Rate (CTR) - The Engagement Number</h2>
+                    <p><strong>What CTR Measures:</strong> The percentage of people who click on something specific - could be a button, link, ad, or email.</p>
+                    <p><strong>How to Calculate CTR:</strong> (Number of clicks / Number of times people saw it) × 100</p>
+                    <h3>When CTR Matters:</h3>
+                    <ul>
+                        <li>Email marketing campaigns</li>
+                        <li>Banner ads</li>
+                        <li>Call-to-action buttons</li>
+                        <li>Where you put links</li>
+                    </ul>
+                    <p><strong>Be Careful With CTR:</strong> High clicks doesn't always mean success. If people click but don't actually buy anything, you might have the wrong message.</p>
+                    <h2>Average Order Value (AOV) - The Money Number</h2>
+                    <p>Pro tip - if you're selling stuff, also look at average order value. Sometimes the version that gets fewer sales actually makes you more money because people buy more expensive stuff. I learned that one in the hard way.</p>
+                    <p><strong>How to Calculate AOV:</strong> Total money made / Number of orders</p>
+                    <h3>Example:</h3>
+                    <ul>
+                        <li>Version A: 100 orders, $10,000 made = $100 AOV</li>
+                        <li>Version B: 80 orders, $9,600 made = $120 AOV</li>
+                    </ul>
+                    <p>Version B might be better even with fewer orders!</p>
+                    <h3>When AOV Really Matters:</h3>
+                    <ul>
+                        <li>Online store optimization</li>
+                        <li>Testing different prices</li>
+                        <li>Testing product recommendations</li>
+                        <li>Testing ways to get people to buy more stuff</li>
+                    </ul>
+                    <h2>Other Important Numbers</h2>
+                    <ul>
+                        <li><strong>Bounce Rate:</strong> The percentage of people who leave immediately. Lower is usually better, but not always.</li>
+                        <li><strong>Time on Page:</strong> How long people spend looking at your stuff.</li>
+                        <li><strong>Return Visitor Rate:</strong> Are people coming back? This shows if they actually liked what they saw.</li>
+                    </ul>
+                    <p>By tracking these metrics, you can get a clear picture of how your versions are performing.</p>
+                `,
+                displayElement: 'image',
+                imageUrl: "https://raw.githubusercontent.com/sourav044/temp/refs/heads/main/Image%20Jul%2024%2C%202025%2C%2005_46_18%20PM.png",
+                formulaHtml: null
+            },
+            // Scene 9: When A/B Testing Works for Your Problem (Shifted from original Scene 7, now Scene 8)
+            {
+                title: "When A/B Testing Works for Your Problem",
+                text: `
+                    <p>Now that we understand both Frequentist (Hypothesis) Testing and Bayesian Testing, how do you know which one works best for your problem? Here’s how you can choose:</p>
+                    <h2>For Large Sample Sizes:</h2>
+                    <p>If you have a large sample size, traditional A/B testing with hypothesis testing is generally sufficient. It’s simpler to implement and gives you clear results based on statistical significance.</p>
+                    <h2>For Small Sample Sizes or Ongoing Testing:</h2>
+                    <p>If you’re working with smaller sample sizes, or if you need to make real-time decisions as data comes in, Bayesian A/B testing might be a better option. It allows you to update your beliefs as new data is collected, providing continuous insights.</p>
+                    <h2>When Testing Multiple Variations:</h2>
+                    <p>Bayesian testing is also helpful if you are comparing more than just two versions (e.g., A/B/C testing), as it can dynamically evaluate multiple versions without needing to perform multiple tests.</p>
+                `,
+                displayElement: 'image',
+                imageUrl: "https://raw.githubusercontent.com/sourav044/temp/refs/heads/main/Image%20Jul%2025%2C%202025%2C%2012_04_23%20PM.png", // Updated image URL
+                formulaHtml: null
+            },
+            // Scene 10: Limitations of A/B Testing (Shifted from original Scene 8, now Scene 9)
+            {
+                title: "Limitations of A/B Testing",
+                text: `
+                    <p>However, A/B testing isn't perfect. Here are a few limitations:</p>
+                    <ul>
+                        <li><strong>It only tests one variable at a time:</strong> This means you can't test multiple changes in a single test. If you want to test a new design and a new call-to-action together, you need to run separate tests.</li>
+                        <li><strong>It requires enough traffic:</strong> You need a large number of visitors to get statistically significant results. Without enough data, your results might not be reliable.</li>
+                        <li><strong>It doesn’t always explain why:</strong> A/B testing tells you which version performs better, but it doesn’t tell you exactly why one version is better. You might need additional research or testing to understand the underlying reasons.</li>
+                    </ul>
+                `,
+                displayElement: 'image',
+                imageUrl: "https://raw.githubusercontent.com/sourav044/temp/refs/heads/main/Image%20Jul%2024%2C%202025%2C%2005_40_46%20PM.png",
+                formulaHtml: null
+            },
+            // Scene 11: Important Considerations for A/B Testing (Shifted from original Scene 10, now Scene 11)
+            {
+                title: "Important Considerations for A/B Testing",
+                text: `
+                    <p>Before we wrap up, let me save you from some mistakes that I've definitely made before.</p>
+                    <h2>Don't Test During Weird Times</h2>
+                    <p>Don't run tests during Black Friday, or during major news events, or when you're running a big sale. Basically, if anything unusual is happening that might change how people act on your site, wait.</p>
+                    <p>I once ran a test during the week when COVID lockdowns started, and my results were completely useless because everyone was just buying emergency supplies and acting totally different than normal. It took me way too long to figure out why my data looked so weird.</p>
+                    <h2>Don't Check Results Every Five Minutes</h2>
+                    <p>Also, resist the urge to check your results every hour. I know it's tempting - trust me, I've been there - but you'll drive yourself crazy, and you might make decisions too early.</p>
+                    <h3>Why Early Peeking Is Bad:</h3>
+                    <ul>
+                        <li>Results jump around a lot in the beginning</li>
+                        <li>You might stop a test just when it's about to show something real</li>
+                        <li>Makes you more likely to see fake results</li>
+                        <li>Can lead to making changes that don't actually work</li>
+                    </ul>
+                    <h2>Other Ways to Mess Things Up</h2>
+                    <ul>
+                        <li><strong>Testing Too Many Things:</strong> If you run 20 A/B tests, one of them will probably show "good" results just by chance, even if nothing actually changed.</li>
+                        <li><strong>Seasonal Stuff:</strong> Testing ice cream ads in winter vs summer will give you very different results.</li>
+                        <li><strong>The Weird Math Thing:</strong> Sometimes version A can be better for every type of customer, but version B looks better overall (or the other way around). Math is weird.</li>
+                    </ul>
+                `,
+                displayElement: 'image',
+                imageUrl: "https://raw.githubusercontent.com/sourav044/temp/refs/heads/main/Image%20Jul%2024%2C%202025%2C%2005_47_46%20PM.png",
+                formulaHtml: null
+            },
+            // Scene 12: Conclusion (Shifted from original Scene 11, now Scene 12)
+            {
+                title: "Conclusion",
+                text: `
+                    <p>To sum it up, A/B testing is a valuable tool that helps you make data-driven decisions. Whether you’re testing a website design, an email campaign, or a product feature, A/B testing gives you real insights into what your audience likes.</p>
+                    <p>By understanding these points, you can make sure your tests are set up correctly, giving you results you can truly trust to make better business decisions.</p>
+                    <p>Thanks for watching! If you found this video helpful, hit that like button, subscribe for more insights, and let me know in the comments: What's the biggest A/B testing mistake you've ever made?</p>
+                    <h2>Your A/B Testing Checklist:</h2>
+                    <ul>
+                        <li>Start with a clear guess - what do you think will happen and why?</li>
+                        <li>Figure out how many people you need - don't just wing it</li>
+                        <li>Pick your testing style - traditional vs Bayesian based on what you need</li>
+                        <li>Set up proper randomization - this is super important</li>
+                        <li>Pick the right numbers to track - focus on what actually matters to your business</li>
+                        <li>Be patient - let the test run all the way</li>
+                        <li>Learn from what happens - whether your guess was right or wrong</li>
+                    </ul>
+                    <p>Start small. Test one thing. See what happens. Learn from it. Then test something else. You don't need to become a math expert overnight, but understanding this stuff will save you from expensive mistakes.</p>
+                    <p>And hey, if you try this stuff out, let me know in the comments how it goes. I love hearing about your experiments, whether they work great or totally fail. That's how we all learn.</p>
+                    <p>If this was helpful, smash that like button - and I mean literally smash it, I need to test if asking people to "smash" it works better than just saying "click" it. See what I did there? </p>
+                    <p>Subscribe if you want more content like this, and I'll see you in the next video where we're going to talk about... actually, I'm not sure yet. What do you want to learn about? Let me know in the comments.</p>
+                    <p>Alright, I'll catch you later!</p>
+                `,
+                displayElement: 'text',
+                imageUrl: null,
+                formulaHtml: null
+            }
+        ];
+
+        /**
+         * Disables or enables all navigation buttons to prevent rapid clicks during animations.
+         * @param {boolean} disabled - True to disable buttons, false to enable.
+         */
+        function setButtonsDisabled(disabled) {
+            nextScenarioButton.disabled = disabled;
+            previousScenarioButton.disabled = disabled;
+            resetButton.disabled = disabled;
+            isAnimating = disabled; // Set animation flag
+        }
+
+        /**
+         * Runs a specific scene based on its index, updating the UI elements accordingly.
+         * @param {number} index - The index of the scene to run.
+         */
+        function runScene(index) {
+            setButtonsDisabled(true); // Disable buttons during scene transition
+
+            const scene = scenes[index];
+
+            // Update the main title based on the current scene's title
+            if (mainTitle) {
+                mainTitle.textContent = scene.title;
+            }
+
+            // Hide all primary display elements first
+            startLogo.classList.add('hidden');
+            imageDisplayArea.classList.add('hidden');
+            formulaDisplayArea.classList.add('hidden'); // Hide formula area
+            textBox.classList.add('hidden'); // Hide text box initially
+
+            // Explicitly set display to 'none' for all elements first
+            startLogo.style.display = 'none';
+            imageDisplayArea.style.display = 'none';
+            formulaDisplayArea.style.display = 'none';
+            textBox.style.display = 'none';
+
+            // Show the relevant element(s) based on displayElement
+            if (scene.displayElement === 'logo') {
+                startLogo.classList.remove('hidden');
+                textBox.classList.remove('hidden'); // Show text box for logo scene
+                textBox.innerHTML = scene.text;
+                startLogo.style.display = 'flex'; // Explicitly set display for logo
+                textBox.style.display = 'block'; // Explicitly set display for text box
+                // Typeset MathJax for the text box (even if no formula, to clear previous)
+                if (typeof MathJax !== 'undefined') {
+                    MathJax.typesetPromise([textBox]).catch((err) => console.error("MathJax typesetting failed:", err));
+                }
+            } else if (scene.displayElement === 'image') {
+                imageDisplayArea.classList.remove('hidden');
+                confusionMatrixImage.src = scene.imageUrl;
+                textBox.classList.remove('hidden'); // Show text box for image scene
+                textBox.innerHTML = scene.text; // Set text content for description
+                imageDisplayArea.style.display = 'flex'; // Explicitly set display for image area
+                textBox.style.display = 'block'; // Explicitly set display for text box
+                if (typeof MathJax !== 'undefined') {
+                    MathJax.typesetPromise([textBox]).catch((err) => console.error("MathJax typesetting failed:", err));
+                }
+            } else if (scene.displayElement === 'formula') {
+                formulaDisplayArea.classList.remove('hidden'); // Show formula area
+                formulaDisplayArea.innerHTML = scene.formulaHtml; // Set formula content
+                textBox.classList.remove('hidden'); // Show text box for formula scene
+                textBox.innerHTML = scene.text; // Set text content for description
+                formulaDisplayArea.style.display = 'flex'; // Explicitly set display for formula area
+                textBox.style.display = 'block'; // Explicitly set display for text box
+                
+                // Re-typeset MathJax for both formula and text box
+                if (typeof MathJax !== 'undefined') {
+                    MathJax.typesetPromise([formulaDisplayArea, textBox]).catch((err) => console.error("MathJax typesetting failed:", err));
+                }
+            } else if (scene.displayElement === 'text') { /* Added explicit handling for 'text' display element */
+                textBox.classList.remove('hidden');
+                textBox.innerHTML = scene.text;
+                textBox.style.display = 'block'; // Ensure text box is displayed as block
+                if (typeof MathJax !== 'undefined') {
+                    MathJax.typesetPromise([textBox]).catch((err) => console.error("MathJax typesetting failed:", err));
+                }
+            }
+            
+            // Re-enable buttons and update their state after a short delay to allow animations to play
+            setTimeout(() => {
+                setButtonsDisabled(false);
+                updateNavigationButtons();
+            }, 1000); // 1-second delay
+        }
+
+        /**
+         * Advances the simulation to the next step (scene).
+         * If at the last step, it resets the simulation.
+         */
+        function nextStep() {
+            if (isAnimating) return; // Prevent multiple clicks during animation
+
+            if (currentSceneIndex < scenes.length - 1) {
+                currentSceneIndex++; // Increment scene index
+                runScene(currentSceneIndex); // Run the new scene
+            } else {
+                resetSimulation(); // If at the end, reset
+            }
+        }
+
+        /**
+         * Reverts the simulation to the previous step (scene).
+         */
+        function previousStep() {
+            if (isAnimating) return; // Prevent multiple clicks during animation
+
+            if (currentSceneIndex > 0) {
+                currentSceneIndex--; // Decrement scene index
+                runScene(currentSceneIndex); // Run the new scene
+            }
+        }
+
+        /**
+         * Updates the disabled state and text of the navigation buttons based on the current scene.
+         */
+        function updateNavigationButtons() {
+            // Disable 'Previous Step' button if at the first scene
+            previousScenarioButton.disabled = (currentSceneIndex === 0);
+            // Change 'Next Step' button text to 'Restart Simulation' if at the last scene
+            nextScenarioButton.textContent = (currentSceneIndex === scenes.length - 1) ? "Restart Simulation" : "Next Step";
+        }
+
+        /**
+         * Resets the entire simulation to its initial start screen state.
+         */
+        function resetSimulation() {
+            setButtonsDisabled(true); // Disable buttons during reset
+
+            currentSceneIndex = 0; // Set current scene to the first one
+            runScene(currentSceneIndex); // Run the first scene
+
+            // Re-enable buttons and update their state after a short delay
+            setTimeout(() => {
+                setButtonsDisabled(false);
+                updateNavigationButtons();
+            }, 500); // 0.5-second delay
+        }
+
+        // Event Listeners for buttons
+        nextScenarioButton.addEventListener('click', nextStep);
+        previousScenarioButton.addEventListener('click', previousStep);
+        resetButton.addEventListener('click', resetSimulation);
+
+        // Initial setup on window load: reset the simulation to its starting state
+        window.onload = function() {
+            resetSimulation();
+        };
+    </script>
+</body>
+</html>
